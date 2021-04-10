@@ -2,19 +2,22 @@ import pygame as p
 from Chess import ChessEngine
 
 class View():
-
-
-    def __init__(self):
-        p.init()
-        self.screen = p.display.set_mode((View.WIDTH, View.HEIGHT))
-        self.clock = p.time.Clock()
-        self.screen.fill(p.Color("white"))
-        self.loadImages()
     WIDTH = HEIGHT = 512  # 400 is another option
     DIMENSION = 8  # dimensions of a chess board 8x8
     SQ_SIZE = HEIGHT // DIMENSION
     MAX_FPS = 15
     IMAGES = {}
+
+
+    def __init__(self):
+
+        p.init()
+        self.screen = p.display.set_mode((self.WIDTH, self.HEIGHT))
+        self.clock = p.time.Clock()
+        self.screen.fill(p.Color("white"))
+        self.loadImages()
+
+
 
     def loadImages(self):
         self.pieces = ["wp", "wR", "wN", "wB", "wQ", "wK", "bp", "bR", "bN", "bB", "bQ", "bK"]
@@ -24,33 +27,48 @@ class View():
     responsible for all graphics in the game
     '''
 
-    def  drawGameState(self, screen, gs):
-        self.drawBoard(self.screen, gs)  # draw squares on the screen
+    def  drawGameState(self, screen, gs, a1):
+        self.drawBoard(self.screen, gs, a1)  # draw squares on the screen
         self.drawPieces(self.screen, gs.board)  # draw pieces on the top of those squares
         '''
         draw squares on the board. the left top is always light
         '''
 
 
-    def drawBoard(self, screen, gs):
+    def drawBoard(self, screen, gs, a1):
         self.colors = [p.Color("white"), p.Color("gray")]
+
 
 
 
         for r in range(View.DIMENSION):
             for c in range(View.DIMENSION):
                 self.color = self.colors[((r + c) % 2)]
-                p.draw.rect(self.screen, self.color, p.Rect(c * View.SQ_SIZE, r * View.SQ_SIZE, View.SQ_SIZE, View.SQ_SIZE))
-
+                p.draw.rect(self.screen, p.Color(self.color), p.Rect(r * View.SQ_SIZE, c * View.SQ_SIZE, View.SQ_SIZE, View.SQ_SIZE))
                 if gs.whiteToMove:
                     p.draw.rect(self.screen, p.Color("green"), p.Rect(0 * View.SQ_SIZE, 0 * View.SQ_SIZE, View.SQ_SIZE, View.SQ_SIZE))
+
                 else:
-                    p.draw.rect(self.screen, p.Color("magenta"), p.Rect(0 * View.SQ_SIZE, 0 * View.SQ_SIZE, View.SQ_SIZE, View.SQ_SIZE))
+                    p.draw.rect(self.screen, p.Color("red"), p.Rect(0 * View.SQ_SIZE, 0 * View.SQ_SIZE, View.SQ_SIZE, View.SQ_SIZE))
+                if len(a1) != 0:
+                    p.draw.rect(self.screen, p.Color("yellow"), p.Rect(a1[1] * View.SQ_SIZE, a1[0] * View.SQ_SIZE, View.SQ_SIZE, View.SQ_SIZE))
+
+
+
+
+
+
+
+
 
 
         '''
-        draw the pieces on the board using the current GameState.board
+        draw the pieces on the board using the current GameState.board 
         '''
+
+    def highlight(self, screen, sqSelected):
+        #p.draw.rect(self.screen, p.Color("blue"), p.Rect(sqSelected[0] * self.SQ_SIZE, sqSelected[1] * self.SQ_SIZE, self.SQ_SIZE, self.SQ_SIZE))
+        screen.blit(p.Rect(sqSelected * self.SQ_SIZE, sqSelected * self.SQ_SIZE, self.SQ_SIZE, self.SQ_SIZE), )
 
 
     def drawPieces(self, screen, board):
@@ -61,5 +79,7 @@ class View():
                     screen.blit(View.IMAGES[self.piece], p.Rect(c * View.SQ_SIZE, r * View.SQ_SIZE, View.SQ_SIZE, View.SQ_SIZE))
 
 
-    def running(self):
-        pass
+
+
+
+

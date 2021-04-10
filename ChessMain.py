@@ -2,42 +2,15 @@
 This is pur main drive file. It will be responsible for handling user input
 and displaying the current GameState object
 """
-import pygame as p
-from Chess import ChessEngine, ChessView
 
 
-
-WIDTH = HEIGHT = 512 #400 is another option
-DIMENSION = 8#dimensions of a chess board 8x8
-SQ_SIZE = HEIGHT // DIMENSION
-MAX_FPS = 15
-IMAGES = {}
-
-'''
-Initialize a global dictionary of images.This will be called only once in the main
-'''
-
-"""def loadImages():
-    pieces = ["wp", "wR", "wN", "wB", "wQ", "wK", "bp", "bR", "bN", "bB", "bQ", "bK"]
-    for piece in pieces:
-        IMAGES[piece] = p.transform.scale(p.image.load("images/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
-        #Note: we can access an image by saying 'IMAGES['wp']'
-"""
-'''The main driver for our code. This will handle user input and updating the graphics'''
-
-def main():
-    """p.init()
-    screen = p.display.set_mode((WIDTH, HEIGHT))
-    clock = p.time.Clock()
-    screen.fill(p.Color("white"))"""
-    view = ChessView.View()
-    gs = ChessEngine.GameState()
-
+'''def play(gs, view):
     running = True
-    sqSelected = () #no square is selected, keep track of the last click of the user (tuple: (row, col))
-    playerClicks = [] #keep track of player clock list of two tuple [(6,4), (4,4)]
+    sqSelected = ()  # no square is selected, keep track of the last click of the user (tuple: (row, col))
+    playerClicks = []  # keep track of player clock list of two tuple [(6,4), (4,4)]
     validMoves = gs.getValidMoves()
-    moveMade = False #flag variable for when a move is made
+    moveMade = False  # flag variable for when a move is made
+
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
@@ -77,34 +50,21 @@ def main():
         view.clock.tick(MAX_FPS)
         p.display.flip()
         #print(IMAGES)
+'''
 
+import pygame as p
+from Chess import ChessEngine, ChessView
 
-"""def drawGameState(screen, gs):
-    drawBoard(screen)#draw squares on the screen
-    drawPieces(screen, gs.board) #draw pieces on the top of those squares
-    '''
-    draw squares on the board. the left top is always light
-    '''
-def drawBoard(screen):
-    colors = [p.Color("white"), p.Color("gray")]
-    for r in range(DIMENSION):
-        for c in range(DIMENSION):
-            color = colors[((r+c)%2)]
-            p.draw.rect(screen, color, p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+def main():
+    """p.init()
+    screen = p.display.set_mode((WIDTH, HEIGHT))
+    clock = p.time.Clock()
+    screen.fill(p.Color("white"))"""
+    view = ChessView.View()
+    gs = ChessEngine.GameState()
+    pl = ChessEngine.Playing()
 
-    '''
-    draw the pieces on the board using the current GameState.board
-    '''
-def drawPieces(screen, board):
-    for r in range(DIMENSION):
-        for c in range(DIMENSION):
-            piece = board[r][c]
-            if piece != "--": #not empty square
-                screen.blit(IMAGES[piece], p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
-
-
-"""
-
+    pl.play(gs, view)
 
 
 

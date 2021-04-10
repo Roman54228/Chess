@@ -3,7 +3,8 @@ This class is responsible for storing all the information about the current stat
 It will also be responsible for determining the valid moves at the current time.
 It will also keep a move log.
 """
-
+import pygame as p
+from Chess import ChessView
 
 class GameState():
     def __init__(self):
@@ -21,12 +22,22 @@ class GameState():
                               'B': self.getBishopMoves, 'Q': self.getQueenMoves, 'K': self.getKingMoves}
         self.whiteToMove = True
         self.moveLog = []
+        self.whiteKingLocation = (7, 4)
+        self.blackKingLocation = (0, 4)
+        self.checkMate = False
+        self.staleMate = False
 
     def makeMove(self, move):
         self.board[move.startRow][move.startCol] = "--"
         self.board[move.endRow][move.endCol] = move.pieceMoved
         self.moveLog.append(move)
         self.whiteToMove = not self.whiteToMove #swap players
+        if move.pieceMoved == "wK":
+            self.whiteKingLocation = (move.endRow, move.endCol)
+        elif move.pieceMoved == "bK":
+            self.balckKingLocation = (move.endRow, move.endCol)
+
+
 
     '''
     Undo the last move made
@@ -38,14 +49,65 @@ class GameState():
             self.board[move.startRow][move.startCol] = move.pieceMoved
             self.board[move.endRow][move.endCol] = move.pieceCaptured
             self.whiteToMove = not self.whiteToMove  # switch turns back
+            if move.pieceMoved == "wK":
+                self.whiteKingLocation = (move.startRow, move.startCol)
+            elif move.pieceMoved == "bK":
+                self.blackKingLocation = (move.startRow, move.startCol)
+
 
     '''
     All moves considering checks
     '''
 
     def getValidMoves(self):
-        return self.getAllPossibleMoves() #for now we dont carry about valid moves
+        moves = self.getAllPossibleMoves()
+        """"#1) generate all possible moves
+        moves = self.getAllPossibleMoves()
+        #2) for each move, make the move
+        for i in range(len(moves) - 1, -1, -1): #when removing from that list go backward through that list
+            self.makeMove(moves[i])
+            #3) generate all oponents moves
+            #4) for each of opponents moves, see if they can attack your king
+            self.whiteToMove = not self.whiteToMove
 
+            if self.inCheck():
+                moves.remove(moves[i]) #5) if they do attack your king, not a valid move
+            self.whiteToMove = not self.whiteToMove
+            self.undoMove()
+        if len(moves) == 0: #either checkmate or stalemate
+            if self.inCheck():
+                self.checkMate = True
+            else:
+                self.staleMate = True
+        else:
+            self.checkMate = False
+            self.staleMate = False"""
+
+        return moves #for now we dont carry about valid moves
+
+    """
+    Determine if the current player is in check
+    """
+
+    def inCheck(self):
+        if self.whiteToMove:
+            return self.squareUnderAttack(self.whiteKingLocation[0], self.whiteKingLocation[1])
+        else:
+            return self.squareUnderAttack(self.blackKingLocation[0], self.blackKingLocation[1])
+
+
+
+    """
+    Determine if the enemy can attack the same square r, c
+    """
+    def squareUnderAttack(self, r, c):
+        self.whiteToMove = not self.whiteToMove #switch to opponent turn
+        oppMoves =  self.getAllPossibleMoves()
+        for move in oppMoves:
+            if move.endRow == r and move.endCol == c: #square is under attack
+                self.whiteToMove = not self.whiteToMove #switch turn back
+                return True
+        return False
     '''
     All moves without considering checks
     '''
@@ -207,3 +269,70 @@ class Move():
 
     def getRankFile(self, r, c):
         return self.colsToFiles[c] + self.rowsToRanks[r]
+
+
+
+class Playing:
+    view = ChessView.View()
+    gs = GameState()
+    def play(self, gs, view):
+        WIDTH = HEIGHT = 512  # 400 is another option
+        DIMENSION = 8  # dimensions of a chess board 8x8
+        SQ_SIZE = HEIGHT // DIMENSION
+        MAX_FPS = 15
+        running = True
+        sqSelected = ()  # no square is selected, keep track of the last click of the user (tuple: (row, col))
+        playerClicks = []  # keep track of player clock list of two tuple [(6,4), (4,4)]
+        validMoves = gs.getValidMoves()
+        moveMade = False  # flag variable for when a move is made
+        a1 = ()
+
+        while running:
+            for e in p.event.get():
+                if e.type == p.QUIT:
+                    running = False
+                #mouse handler
+                elif e.type == p.MOUSEBUTTONDOWN:
+
+                    location = p.mouse.get_pos() #(x,y) location of mouse
+                    col = location[0]//SQ_SIZE
+                    row = location[1]//SQ_SIZE
+                    if sqSelected == (row, col): #the user clicked the same square
+                        sqSelected = () #deselect
+                        playerClicks = [] #clear player clicks
+                    else:
+                        sqSelected = (row, col)
+                        playerClicks.append(sqSelected) #append for both 1st and 2nd clicks
+                        if gs.board[sqSelected[0]][sqSelected[1]] != "--":
+                            a1 = sqSelected
+                        else:
+                            a1 = ()
+                    if len(playerClicks) == 2: #after 2nd click
+                        move = Move(playerClicks[0], playerClicks[1], gs.board)
+
+                        #a1 = playerClicks[0]
+                        print(a1)
+                        #print(move.getChessNotation())
+
+                        if move in validMoves:
+                            gs.makeMove(move)
+                            moveMade = True
+
+                            sqSelected = () #reset player clicks
+                            playerClicks = [] #reset
+                        else:
+                            playerClicks = [sqSelected]
+                #key handler
+                elif e.type == p.KEYDOWN:
+                    if e.key == p.K_z: #undo when z is pressed
+                        gs.undoMove()
+                        moveMade = True
+            if moveMade:
+                validMoves = gs.getValidMoves()
+                moveMade = False
+
+
+            view.drawGameState(view.screen, gs, a1)
+            view.clock.tick(15)
+            p.display.flip()
+        #print(IMAGES)
