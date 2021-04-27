@@ -38,10 +38,11 @@ class View():
     def highLight(self, screen, gs, validmoves, a1):
         if a1 != ():
             r, c = a1
-            s = p.Surface((self.SQ_SIZE, self.SQ_SIZE))
-            s.set_alpha(100)
-            s.fill(p.Color('blue'))
-            for move in validmoves:
+            s = p.Surface((self.SQ_SIZE, self.SQ_SIZE))#создаем поверхность вот таких размеров
+            s.set_alpha(120)#прозрачность от 0 до 255, чем больше, тем менее прозрачный
+            s.fill(p.Color('blue'))#цвет
+            for move in validmoves:#обходим массив со всеми ходами, мы кликнули на фигуру -> записали ее стартовое положение
+                                #находим наши ходы по критерию, что у экземпляров startRow/endCol совпадают с коррдинатами фигуры
                 if move.startRow == r and move.startCol == c:
                     screen.blit(s, (move.endCol*self.SQ_SIZE, move.endRow*self.SQ_SIZE))
                     #p.draw.rect(self.screen, p.Color("green"), p.Rect(move.endCol * View.SQ_SIZE, move.endRow * View.SQ_SIZE, View.SQ_SIZE, View.SQ_SIZE))
