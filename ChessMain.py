@@ -1,8 +1,3 @@
-"""
-This is pur main drive file. It will be responsible for handling user input
-and displaying the current GameState object
-"""
-
 
 '''def play(gs, view):
     running = True

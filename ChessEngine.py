@@ -1,13 +1,10 @@
-"""
-This class is responsible for storing all the information about the current state of a chess game.
-It will also be responsible for determining the valid moves at the current time.
-It will also keep a move log.
-"""
+
 import pygame as p
 from Chess import ChessView
 
 class GameState():
     def __init__(self):
+        #имена фигур в матрице соответствуют названию .png файлов для прогрузки картинки
         self.board = [
             ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
             ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
@@ -17,9 +14,10 @@ class GameState():
             ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]]
-
+        #через этот словарь будем получать доступные ходы для каждой из фигур
         self.moveFunctions = {'p': self.getPawnMoves, 'R': self.getRookMoves, 'N': self.getKnightMoves,
                               'B': self.getBishopMoves, 'Q': self.getQueenMoves, 'K': self.getKingMoves}
+
         self.whiteToMove = True
         self.moveLog = []
         self.whiteKingLocation = (7, 4)
@@ -31,7 +29,7 @@ class GameState():
         self.board[move.startRow][move.startCol] = "--"
         self.board[move.endRow][move.endCol] = move.pieceMoved
         self.moveLog.append(move)
-        self.whiteToMove = not self.whiteToMove #swap players
+        self.whiteToMove = not self.whiteToMove #смена игроков
         if move.pieceMoved == "wK":
             self.whiteKingLocation = (move.endRow, move.endCol)
         elif move.pieceMoved == "bK":
@@ -40,11 +38,11 @@ class GameState():
 
 
     '''
-    Undo the last move made
+    отмена последнего хода
     '''
 
     def undoMove(self):
-        if len(self.moveLog) != 0: #make sure there was a move
+        if len(self.moveLog) != 0: #убедиться что ход был
             move = self.moveLog.pop()
             self.board[move.startRow][move.startCol] = move.pieceMoved
             self.board[move.endRow][move.endCol] = move.pieceCaptured
@@ -55,67 +53,20 @@ class GameState():
                 self.blackKingLocation = (move.startRow, move.startCol)
 
 
-    '''
-    All moves considering checks
-    '''
 
-    def getValidMoves(self):
+    def getValidMoves(self): #ходы которые не подставляют под шах и мат
         moves = self.getAllPossibleMoves()
-        """"#1) generate all possible moves
-        moves = self.getAllPossibleMoves()
-        #2) for each move, make the move
-        for i in range(len(moves) - 1, -1, -1): #when removing from that list go backward through that list
-            self.makeMove(moves[i])
-            #3) generate all oponents moves
-            #4) for each of opponents moves, see if they can attack your king
-            self.whiteToMove = not self.whiteToMove
-
-            if self.inCheck():
-                moves.remove(moves[i]) #5) if they do attack your king, not a valid move
-            self.whiteToMove = not self.whiteToMove
-            self.undoMove()
-        if len(moves) == 0: #either checkmate or stalemate
-            if self.inCheck():
-                self.checkMate = True
-            else:
-                self.staleMate = True
-        else:
-            self.checkMate = False
-            self.staleMate = False"""
-
-        return moves #for now we dont carry about valid moves
+        return moves #( пока не готово, просто возвращает всевозоможные ходы
 
     """
     Determine if the current player is in check
     """
 
-    def inCheck(self):
-        if self.whiteToMove:
-            return self.squareUnderAttack(self.whiteKingLocation[0], self.whiteKingLocation[1])
-        else:
-            return self.squareUnderAttack(self.blackKingLocation[0], self.blackKingLocation[1])
 
-
-
-    """
-    Determine if the enemy can attack the same square r, c
-    """
-    def squareUnderAttack(self, r, c):
-        self.whiteToMove = not self.whiteToMove #switch to opponent turn
-        oppMoves =  self.getAllPossibleMoves()
-        for move in oppMoves:
-            if move.endRow == r and move.endCol == c: #square is under attack
-                self.whiteToMove = not self.whiteToMove #switch turn back
-                return True
-        return False
-    '''
-    All moves without considering checks
-    '''
-
-    def getAllPossibleMoves(self):
-        moves = []
-        for r in range(len(self.board)): #number of rows
-            for c in range(len(self.board[r])): #number of cols in a given row
+    def getAllPossibleMoves(self):#возвращает список всевозможных ходов
+        moves = []#заполняется экземплярами класса Move()
+        for r in range(len(self.board)): #число строк
+            for c in range(len(self.board[r])): #число столбцов
                 turn = self.board[r][c][0]
                 if (turn == 'w' and self.whiteToMove) or (turn == 'b' and not self.whiteToMove):
                     piece = self.board[r][c][1]
@@ -128,15 +79,15 @@ class GameState():
     Get all pawn moves for the pawn located at row, col and add these moves to the list
     '''
     def getPawnMoves(self, r, c, moves):
-        if self.whiteToMove: #white pawn move
+        if self.whiteToMove: #ход белых
             if self.board[r-1][c] == "--":
                 moves.append(Move((r, c), (r - 1, c), self.board))
                 if r == 6 and self.board[r-2][c] == "--":
                     moves.append(Move((r, c), (r - 2, c), self.board))
-            if c - 1 >= 0: #attack to the left
-                if self.board[r-1][c-1][0] == 'b': #enemy piece
+            if c - 1 >= 0: #атаковать налево
+                if self.board[r-1][c-1][0] == 'b': #вражеская фигура
                     moves.append(Move((r, c), (r - 1, c - 1), self.board))
-            if c + 1 <= 7: # attack to the right
+            if c + 1 <= 7: # атаковать направо
                 if self.board[r-1][c+1][0] == 'b':
                     moves.append(Move((r, c), (r - 1, c + 1), self.board))
 
@@ -145,17 +96,17 @@ class GameState():
                 moves.append(Move((r, c), (r + 1, c), self.board))
                 if r == 1 and self.board[r+2][c] == "--":
                     moves.append(Move((r, c), (r + 2, c), self.board))
-            if c - 1 >= 0: #attack to the left
-                if self.board[r+1][c-1][0] == 'w': #enemy piece
+            if c - 1 >= 0: #атаковать налево
+                if self.board[r+1][c-1][0] == 'w': #вражеская фигура
                     moves.append(Move((r, c), (r + 1 , c - 1), self.board))
-            if c + 1 <= 7: # attack to the right
+            if c + 1 <= 7: # aтаковать направо
                 if self.board[r+1][c+1][0] == 'w':
                     moves.append(Move((r, c), (r + 1, c + 1), self.board))
 
 
 
     '''
-    Get all pawn moves for the rook located at row, col and add these moves to the list
+    Все допустимые ходы ферзя, находящегося в row, col  добавляем эти экземпляры класса Move в список moves
     '''
     def getRookMoves(self, r, c, moves):
         directions = ((-1, 0), (1, 0), (0, -1), (0, 1))
@@ -180,7 +131,7 @@ class GameState():
 
 
 
-
+    #Ходы слона
     def getBishopMoves(self, r, c, moves):
         directions = ((-1, -1), (-1, 1), (1, -1), (1, 1))
         enemyColor = "b" if self.whiteToMove else "w"
@@ -200,7 +151,7 @@ class GameState():
                 else:
                     break
 
-
+    #Ходы коня
     def getKnightMoves(self, r, c, moves):
         knighMoves = ((-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1))
         allyColor = "w" if self.whiteToMove else "b"
@@ -213,7 +164,7 @@ class GameState():
                     moves.append(Move((r,c), (endRow, endCol), self.board))
 
 
-
+    #Ходы королевы
     def getQueenMoves(self, r, c, moves):
         self.getBishopMoves(r, c, moves)
         self.getRookMoves(r, c, moves)
@@ -230,7 +181,7 @@ class GameState():
                     moves.append(Move((r, c), (endRow, endCol), self.board))
 
 
-
+#Аргументы - это клетка с которой начинаем ходить, клетка в которую хотим перейти и доска
 class Move():
 
     ranksToRows = {"1": 7, "2": 6, "3": 5, "4": 4,
@@ -250,7 +201,7 @@ class Move():
         self.pieceMoved = board[self.startRow][self.startCol]
         self.pieceCaptured = board[self.endRow][self.endCol]
         self.moveID = self.startRow * 1000 + self.startCol * 100 + self.endRow * 10 + self.endCol
-        print(self.moveID)
+        #print(self.moveID)
 
 
     '''
@@ -263,7 +214,7 @@ class Move():
         return False
 
 
-
+    #логирование ходов
     def getChessNotation(self):
         return self.getRankFile(self.startRow, self.startCol) + self.getRankFile(self.endRow, self.endCol)
 
@@ -276,55 +227,51 @@ class Playing:
     view = ChessView.View()
     gs = GameState()
     def play(self, gs, view):
-        WIDTH = HEIGHT = 512  # 400 is another option
-        DIMENSION = 8  # dimensions of a chess board 8x8
-        SQ_SIZE = HEIGHT // DIMENSION
-        MAX_FPS = 15
         running = True
-        sqSelected = ()  # no square is selected, keep track of the last click of the user (tuple: (row, col))
-        playerClicks = []  # keep track of player clock list of two tuple [(6,4), (4,4)]
+        sqSelected = ()  # клетка не выбрана, сохраняем клики ввиде кортежа (tuple: (row, col))
+        playerClicks = []  # сохраняем два клика в список [(6,4), (4,4)]
         validMoves = gs.getValidMoves()
-        moveMade = False  # flag variable for when a move is made
-        a1 = ()
+        moveMade = False  # флаг, отслеживаем был ли сделан ход
+        a1 = () #пустой кортеж, нужен для подсвечивания
 
         while running:
             for e in p.event.get():
                 if e.type == p.QUIT:
                     running = False
-                #mouse handler
+                #клик мышки заносится в очередь
                 elif e.type == p.MOUSEBUTTONDOWN:
 
-                    location = p.mouse.get_pos() #(x,y) location of mouse
-                    col = location[0]//SQ_SIZE
-                    row = location[1]//SQ_SIZE
-                    if sqSelected == (row, col): #the user clicked the same square
-                        sqSelected = () #deselect
-                        playerClicks = [] #clear player clicks
+                    location = p.mouse.get_pos() #(x,y) координаты курсора
+                    col = location[0]//view.SQ_SIZE
+                    row = location[1]//view.SQ_SIZE
+                    if sqSelected == (row, col): #игрок кликнул на ту эже клетку
+                        sqSelected = () #в этом случае очистим кортеж
+                        playerClicks = [] #и очистим список кликов
                     else:
                         sqSelected = (row, col)
-                        playerClicks.append(sqSelected) #append for both 1st and 2nd clicks
+                        playerClicks.append(sqSelected)
                         if gs.board[sqSelected[0]][sqSelected[1]] != "--":
                             a1 = sqSelected
                         else:
                             a1 = ()
-                    if len(playerClicks) == 2: #after 2nd click
+                    if len(playerClicks) == 2: #после второго клика
                         move = Move(playerClicks[0], playerClicks[1], gs.board)
 
                         #a1 = playerClicks[0]
-                        print(a1)
-                        #print(move.getChessNotation())
 
-                        if move in validMoves:
+                        print(move.getChessNotation())#выводим логи ходов в консоль
+
+                        if move in validMoves:#если move в списке доступных ходов, то совершаем такой ход
+                            print(validMoves)
                             gs.makeMove(move)
                             moveMade = True
-
-                            sqSelected = () #reset player clicks
-                            playerClicks = [] #reset
+                            sqSelected = () #очищаем все
+                            playerClicks = []
                         else:
                             playerClicks = [sqSelected]
-                #key handler
+                #контроль клавиатуры
                 elif e.type == p.KEYDOWN:
-                    if e.key == p.K_z: #undo when z is pressed
+                    if e.key == p.K_z: #возврат хода, при нажатии клавиши z
                         gs.undoMove()
                         moveMade = True
             if moveMade:
@@ -332,7 +279,7 @@ class Playing:
                 moveMade = False
 
 
-            view.drawGameState(view.screen, gs, a1)
+            view.drawGameState(view.screen, gs, a1, validMoves)
             view.clock.tick(15)
             p.display.flip()
         #print(IMAGES)

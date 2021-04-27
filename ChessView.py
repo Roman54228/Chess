@@ -2,8 +2,8 @@ import pygame as p
 from Chess import ChessEngine
 
 class View():
-    WIDTH = HEIGHT = 512  # 400 is another option
-    DIMENSION = 8  # dimensions of a chess board 8x8
+    WIDTH = HEIGHT = 512  # 512 либо 400
+    DIMENSION = 8  # доска 8x8
     SQ_SIZE = HEIGHT // DIMENSION
     MAX_FPS = 15
     IMAGES = {}
@@ -27,12 +27,24 @@ class View():
     responsible for all graphics in the game
     '''
 
-    def  drawGameState(self, screen, gs, a1):
-        self.drawBoard(self.screen, gs, a1)  # draw squares on the screen
-        self.drawPieces(self.screen, gs.board)  # draw pieces on the top of those squares
+    def  drawGameState(self, screen, gs, a1, validMoves):
+        self.drawBoard(self.screen, gs, a1)  # рисует клетки на доске
+        self.drawPieces(self.screen, gs.board)  # рисует фигуры поверх клеток
+        self.highLight(self.screen, gs, validMoves, a1)
         '''
         draw squares on the board. the left top is always light
         '''
+
+    def highLight(self, screen, gs, validmoves, a1):
+        if a1 != ():
+            r, c = a1
+            s = p.Surface((self.SQ_SIZE, self.SQ_SIZE))
+            s.set_alpha(100)
+            s.fill(p.Color('blue'))
+            for move in validmoves:
+                if move.startRow == r and move.startCol == c:
+                    screen.blit(s, (move.endCol*self.SQ_SIZE, move.endRow*self.SQ_SIZE))
+                    #p.draw.rect(self.screen, p.Color("green"), p.Rect(move.endCol * View.SQ_SIZE, move.endRow * View.SQ_SIZE, View.SQ_SIZE, View.SQ_SIZE))
 
 
     def drawBoard(self, screen, gs, a1):
