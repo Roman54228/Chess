@@ -262,11 +262,16 @@ class Playing:
                         print(move.getChessNotation())#выводим логи ходов в консоль
 
                         if move in validMoves:#если move в списке доступных ходов, то совершаем такой ход
-                            print(validMoves)
+                            #print(validMoves)
+
                             gs.makeMove(move)
                             moveMade = True
                             sqSelected = () #очищаем все
                             playerClicks = []
+                            if move.pieceCaptured[1] == "K":
+                                pygame.quit()
+                                sys.exit()
+
                         else:
                             playerClicks = [sqSelected]
                 #контроль клавиатуры
